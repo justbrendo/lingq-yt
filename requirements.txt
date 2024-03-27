@@ -1,0 +1,5 @@
+pytube
+ffmpeg-python
+python-dotenv
+Requests
+requests-toolbelt
