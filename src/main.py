@@ -12,6 +12,7 @@ from utils import LingQ
 LANGUAGE_CODE = "de"
 COURSE_ID = 1598834
 MODEL_NAME = "ggml-model-german.bin"
+MAX_TITLE_SIZE = 60
 
 
 def should_overwrite(file_path, name):
@@ -31,10 +32,20 @@ def main():
 
     # Get the video from the URL
     yt = YouTube(str(sys.argv[1]))
-    video = yt.streams.filter(only_audio=True, file_extension='mp4').first()
+    video = yt.streams.filter(only_audio=True).order_by('abr').desc().first()
 
     # Remove special any special char from the video's title
     clean_title = re.sub(r'[^\w\s]', '', yt.title)
+
+    # Get a custom title for the video
+    print(f"Title: {clean_title[:MAX_TITLE_SIZE]}")
+    custom_title = input(f"Enter a custom title for the video (leave empty for default): ")
+    if custom_title:
+        # Custom title can't exceed MAX_TITLE_SIZE
+        if len(custom_title) > MAX_TITLE_SIZE:
+            print("Error: Custom title can't exceed MAX_TITLE_SIZE")
+            sys.exit(1)
+        clean_title = re.sub(r'[^\w\s]', '', custom_title)
 
     # Get the download folder
     download_folder = f"downloads/{clean_title}/"
@@ -62,14 +73,15 @@ def main():
         print(f"{yt.title} has been converted to mp3 successfully")
 
     if overwrite_wav:
-        ffmpeg.input(video_file_path).output(wav_path).run(overwrite_output=True)
+        ffmpeg.input(video_file_path).output(wav_path, ar="16000").run(overwrite_output=True)
         print(f"{yt.title} has been converted to wav successfully")
 
     # Transcribe the audio using Whisper
     if should_overwrite(f"{download_folder}audio.srt", 'subtitle'):
         model_path = os.path.abspath(f".\\whisper\\models\\{MODEL_NAME}")
         exe_path = os.path.abspath(".\\whisper\\main.exe")
-        os.system(f"{exe_path} --threads 32 --output-srt --language {LANGUAGE_CODE} --model {model_path} --file \"{wav_path}\"")
+        os.system(
+            f"{exe_path} --threads 16 --output-srt --language {LANGUAGE_CODE} --model {model_path} --file \"{wav_path}\"")
 
     # Upload the video to LingQ
     url = f"https://www.lingq.com/en/learn/{LANGUAGE_CODE}/web/editor/courses/{COURSE_ID}"
@@ -90,7 +102,7 @@ def main():
             ("isHidden", "true"),
             ("language", "de"),
             ("status", "private"),
-            ("title", yt.title[:60]),
+            ("title", clean_title),
             ("video", f"{sys.argv[1]}"),
             ("videoDuration", str(yt.length)),
             ("save", "true"),
@@ -98,11 +110,12 @@ def main():
         ]
     )
 
-    response = LingQ().post_from_multipart_data(LANGUAGE_CODE, data)
-    if response.status_code != 201:
+    if input("Do you want to upload the video to LingQ? (y/n): ") == "y":
+        response = LingQ().post_from_multipart_data(LANGUAGE_CODE, data)
+        if response.status_code != 201:
+            return
+        print(f"Posted video {yt.title} successfully")
         return
-
-    print(f"Posted video {yt.title} successfully")
 
 
 if __name__ == "__main__":
