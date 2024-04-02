@@ -7,11 +7,14 @@ import ffmpeg
 from pytube import YouTube
 from requests_toolbelt import MultipartEncoder
 
-from utils import LingQ
+from utils import LingQ, Transcriber
+
+# Only used if on windows, otherwise the model is automatically downloaded by faster-whisper
+# Expected path: src/whisper/models/ggml-model-german.bin
+MODEL_NAME = "ggml-model-german.bin"
 
 LANGUAGE_CODE = "de"
 COURSE_ID = 1598834
-MODEL_NAME = "ggml-model-german.bin"
 MAX_TITLE_SIZE = 60
 
 
@@ -78,10 +81,8 @@ def main():
 
     # Transcribe the audio using Whisper
     if should_overwrite(f"{download_folder}audio.srt", 'subtitle'):
-        model_path = os.path.abspath(f".\\whisper\\models\\{MODEL_NAME}")
-        exe_path = os.path.abspath(".\\whisper\\main.exe")
-        os.system(
-            f"{exe_path} --threads 16 --output-srt --language {LANGUAGE_CODE} --model {model_path} --file \"{wav_path}\"")
+        transcriber = Transcriber(wav_path, download_folder, yt.length)
+        transcriber.transcribe()
 
     # Upload the video to LingQ
     url = f"https://www.lingq.com/en/learn/{LANGUAGE_CODE}/web/editor/courses/{COURSE_ID}"
@@ -95,7 +96,7 @@ def main():
         [
             ("audio", ("audio.mp3", audio, "audio/mpeg")),
             ("image", ("thumbnail.jpg", thumbnail, "application/octet-stream")),
-            ("description", 'This video has been uploaded by Brendo'),
+            ("description", 'This video has been uploaded by https://github.com/justbrendo/lingq-yt'),
             ("file", ("audio.srt", subs, "application/octet-stream")),
             ("hasPrice", "false"),
             ("isProtected", "false"),

@@ -3,3 +3,6 @@ ffmpeg-python
 python-dotenv
 Requests
 requests-toolbelt
+faster-whisper
+transformers[torch]>=4.23
+tqdm
