@@ -81,7 +81,7 @@ def main():
 
     # Transcribe the audio using Whisper
     if should_overwrite(f"{download_folder}audio.srt", 'subtitle'):
-        transcriber = Transcriber(wav_path, download_folder, yt.length)
+        transcriber = Transcriber(wav_path, download_folder, yt.length, MODEL_NAME)
         transcriber.transcribe()
 
     # Upload the video to LingQ

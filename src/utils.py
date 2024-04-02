@@ -6,6 +6,7 @@ from requests_toolbelt.multipart import MultipartEncoder
 from dotenv import dotenv_values
 from tqdm import tqdm
 
+
 class LingQConfig:
     def __init__(self):
         # Assumes the scripts are run in the src folder
@@ -47,10 +48,11 @@ class LingQ:
 
 class Transcriber:
 
-    def __init__(self, wav_path, download_folder, video_length_in_seconds):
+    def __init__(self, wav_path, download_folder, video_length_in_seconds, model_name):
         self.wav_path = wav_path
         self.download_folder = download_folder
         self.video_length_in_seconds = video_length_in_seconds
+        self.model_name = model_name
 
     def __transcribe_as_windows(self):
         model_path = os.path.abspath(f".\\whisper\\models\\{self.model_name}")
