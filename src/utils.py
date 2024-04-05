@@ -48,17 +48,18 @@ class LingQ:
 
 class Transcriber:
 
-    def __init__(self, wav_path, download_folder, video_length_in_seconds, model_name):
+    def __init__(self, wav_path, download_folder, video_length_in_seconds, model_name, language_code):
         self.wav_path = wav_path
         self.download_folder = download_folder
         self.video_length_in_seconds = video_length_in_seconds
         self.model_name = model_name
+        self.language_code = language_code
 
     def __transcribe_as_windows(self):
         model_path = os.path.abspath(f".\\whisper\\models\\{self.model_name}")
         exe_path = os.path.abspath(".\\whisper\\main.exe")
         os.system(
-            f"{exe_path} --threads 16 --output-srt --language en --model {model_path} --file \"{self.wav_path}\"")
+            f"{exe_path} --threads 16 --output-srt --language {self.language_code} --model {model_path} --file \"{self.wav_path}\"")
 
     def __transcribe_as_linux(self):
         import faster_whisper
