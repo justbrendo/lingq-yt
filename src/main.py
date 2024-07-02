@@ -4,8 +4,11 @@ import sys
 import urllib.request
 
 import ffmpeg
-from pytube import YouTube
 from requests_toolbelt import MultipartEncoder
+
+from pytube import YouTube
+from pytube.innertube import _default_clients
+# _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
 from utils import LingQ, Transcriber
 
@@ -34,7 +37,7 @@ def main():
         sys.exit(1)
 
     # Get the video from the URL
-    yt = YouTube(str(sys.argv[1]))
+    yt = YouTube(str(sys.argv[1]), use_oauth=True, allow_oauth_cache=True)
     video = yt.streams.filter(only_audio=True).order_by('abr').desc().first()
 
     # Remove special any special char from the video's title

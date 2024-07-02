@@ -6,7 +6,6 @@ from requests_toolbelt.multipart import MultipartEncoder
 from dotenv import dotenv_values
 from tqdm import tqdm
 
-
 class LingQConfig:
     def __init__(self):
         # Assumes the scripts are run in the src folder
@@ -79,9 +78,9 @@ class Transcriber:
 
         model = faster_whisper.WhisperModel(
             model_name,
-            device="cpu",
-            compute_type="int8",
-            cpu_threads=16,
+            device="cuda",
+            compute_type="float16",
+            # cpu_threads=16,
         )
 
         segments, _info = model.transcribe(self.wav_path, beam_size=5)
