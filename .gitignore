@@ -1,5 +1,7 @@
 .venv
+venv
 .idea
 .env
 src/downloads
 src/whisper/models/*
+src/__pycache__
