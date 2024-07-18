@@ -6,9 +6,7 @@ import urllib.request
 import ffmpeg
 from requests_toolbelt import MultipartEncoder
 
-from pytube import YouTube
-from pytube.innertube import _default_clients
-# _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
+from pytubefix import YouTube
 
 from utils import LingQ, Transcriber
 
