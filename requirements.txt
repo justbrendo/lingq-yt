@@ -1,8 +1,10 @@
-pytube
+pytubefix
 ffmpeg-python
 python-dotenv
 Requests
 requests-toolbelt
 faster-whisper
-transformers[torch]>=4.23
 tqdm
+--index-url https://download.pytorch.org/whl/cu121
+torch
+transformers[torch]>=4.23
