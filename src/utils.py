@@ -54,13 +54,7 @@ class Transcriber:
         self.model_name = model_name
         self.language_code = language_code
 
-    def __transcribe_as_windows(self):
-        model_path = os.path.abspath(f".\\whisper\\models\\{self.model_name}")
-        exe_path = os.path.abspath(".\\whisper\\main.exe")
-        os.system(
-            f"{exe_path} --threads 16 --output-srt --language {self.language_code} --model {model_path} --file \"{self.wav_path}\"")
-
-    def __transcribe_as_linux(self):
+    def transcribe(self):
         import faster_whisper
 
         models = ["tiny", "tiny.en", "base", "base.en",
@@ -122,14 +116,3 @@ class Transcriber:
 
         # Close the progress bar
         pbar.close()
-
-    def transcribe(self):
-        if platform.system() == 'Windows':
-            print("Detected platform: Windows, using ConstMe Whisper.")
-            self.__transcribe_as_windows()
-        elif platform.system() == 'Linux':
-            print("Detected platform: Linux, using faster-whisper.")
-            self.__transcribe_as_linux()
-        else:
-            print("Unsupported platform")
-            exit(1)
