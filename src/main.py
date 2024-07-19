@@ -10,10 +10,6 @@ from pytubefix import YouTube
 
 from utils import LingQ, Transcriber
 
-# Only used if on windows, otherwise the model is automatically downloaded by faster-whisper
-# Expected path: src/whisper/models/ggml-model-german.bin
-MODEL_NAME = "ggml-model-german.bin"
-
 LANGUAGE_CODE = "de"
 COURSE_ID = 1598834
 MAX_TITLE_SIZE = 60
