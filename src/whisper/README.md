@@ -1,1 +1,0 @@
-main.exe is the cli implementation of whisper. It's the best available solution for GPU performance and accuracy. It's a windows-only solution, so this script is also windows-only.
