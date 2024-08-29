@@ -47,11 +47,10 @@ class LingQ:
 
 class Transcriber:
 
-    def __init__(self, wav_path, download_folder, video_length_in_seconds, model_name, language_code):
+    def __init__(self, wav_path, download_folder, video_length_in_seconds, language_code):
         self.wav_path = wav_path
         self.download_folder = download_folder
         self.video_length_in_seconds = video_length_in_seconds
-        self.model_name = model_name
         self.language_code = language_code
 
     def transcribe(self):
