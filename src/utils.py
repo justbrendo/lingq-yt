@@ -5,6 +5,10 @@ import platform
 from requests_toolbelt.multipart import MultipartEncoder
 from dotenv import dotenv_values
 from tqdm import tqdm
+import whisperx
+import gc
+
+device = "cuda"
 
 class LingQConfig:
     def __init__(self):
@@ -54,7 +58,6 @@ class Transcriber:
         self.language_code = language_code
 
     def transcribe(self):
-        import faster_whisper
 
         models = ["tiny", "tiny.en", "base", "base.en",
                   "small", "small.en", "medium", "medium.en",
@@ -69,14 +72,19 @@ class Transcriber:
                 print(f"{i}. {model}", end=" | ")
         model_name = models[int(input("Enter the model number: ")) - 1]
 
-        model = faster_whisper.WhisperModel(
+        model = whisperx.load_model(
             model_name,
-            device="cuda",
+            device=device,
             compute_type="float16",
-            # cpu_threads=16,
         )
+        
+        audio = whisperx.load_audio(self.wav_path)
+        result = model.transcribe(audio, batch_size=16)
+        
+        model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
+        aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
 
-        segments, _info = model.transcribe(self.wav_path, beam_size=5)
+        # segments, _info = model.transcribe(self.wav_path, beam_size=5)
 
         def format_timestamp(seconds: float, always_include_hours: bool = False):
             assert seconds >= 0, "non-negative timestamp expected"
@@ -93,25 +101,26 @@ class Transcriber:
 
             hours_marker = f"{hours:02d}:" if always_include_hours or hours > 0 else ""
             return f"{hours_marker}{minutes:02d}:{seconds:02d},{milliseconds:03d}"
-
+        
         # Initialize the progress bar
         pbar = tqdm(total=self.video_length_in_seconds, desc="Transcribing")
 
+        # Write the SRT file
         def write_srt(transcript, file):
             for chunk, segment in enumerate(transcript, start=1):
                 print(
                     f"{chunk}\n"
-                    f"{format_timestamp(segment.start, always_include_hours=True)} --> "
-                    f"{format_timestamp(segment.end, always_include_hours=True)}\n"
-                    f"{segment.text.strip().replace('-->', '->')}\n",
+                    f"{format_timestamp(segment['start'], always_include_hours=True)} --> "
+                    f"{format_timestamp(segment['end'], always_include_hours=True)}\n"
+                    f"{segment['text'].strip().replace('-->', '->')}\n",
                     file=file,
                     flush=True,
                 )
                 # Update the progress bar
-                pbar.update(segment.end - segment.start)
-
+                pbar.update(segment['end'] - segment['start'])
+            
         with open(f"{self.download_folder}audio.srt", "w", encoding="utf-8") as srt:
-            write_srt(segments, file=srt)
+             write_srt(aligned_result["segments"], file=srt)
 
         # Close the progress bar
         pbar.close()
