@@ -14,10 +14,14 @@ LANGUAGE_CODE = "de"
 COURSE_ID = 1598834
 MAX_TITLE_SIZE = 60
 
+auto_confirm = False
 
 def should_overwrite(file_path, name):
+    global auto_confirm
     if os.path.exists(file_path):
-        overwrite = input(f"The {name} already exists. Do you want to overwrite it? (y/n): ")
+        if auto_confirm:
+            return True
+        overwrite =  input(f"The {name} already exists. Do you want to overwrite it? (y/n): ")
         if overwrite.lower() != "y":
             return False
     return True
@@ -29,6 +33,9 @@ def main():
         print("Error: You need to provide a valid URL")
         print("Usage: python main.py <URL>")
         sys.exit(1)
+    
+    global auto_confirm
+    auto_confirm = len(sys.argv) > 2 and sys.argv[2] == "-y"
 
     # Get the video from the URL
     yt = YouTube(str(sys.argv[1]), use_oauth=True, allow_oauth_cache=True)
@@ -39,34 +46,36 @@ def main():
 
     # Get a custom title for the video
     print(f"Title: {clean_title[:MAX_TITLE_SIZE]}")
-    custom_title = input(f"Enter a custom title for the video (leave empty for default): ")
-    if custom_title:
-        # Custom title can't exceed MAX_TITLE_SIZE
-        if len(custom_title) > MAX_TITLE_SIZE:
-            print("Error: Custom title can't exceed MAX_TITLE_SIZE")
-            sys.exit(1)
-        clean_title = re.sub(r'[^\w\s]', '', custom_title)
+    
+    if not auto_confirm:
+        custom_title = input(f"Enter a custom title for the video (leave empty for default): ")
+        if custom_title:
+            # Custom title can't exceed MAX_TITLE_SIZE
+            if len(custom_title) > MAX_TITLE_SIZE:
+                print("Error: Custom title can't exceed MAX_TITLE_SIZE")
+                sys.exit(1)
+            clean_title = re.sub(r'[^\w\s]', '', custom_title)
 
     # Get the download folder
     download_folder = f"downloads/{clean_title}/"
 
     # Download the video
     video_file_path = f"{download_folder}video.mp4"
-    if should_overwrite(video_file_path, "video"):
+    if  should_overwrite(video_file_path, "video"):
         video.download(output_path=download_folder, filename=f"video.mp4")
         print(f"{yt.title} has been downloaded successfully")
 
     # Download the thumbnail
     thumbnail_file_path = f"{download_folder}thumbnail.jpg"
-    if should_overwrite(thumbnail_file_path, "thumbnail"):
+    if  should_overwrite(thumbnail_file_path, "thumbnail"):
         urllib.request.urlretrieve(yt.thumbnail_url, thumbnail_file_path)
         print(f"{yt.title} thumbnail has been downloaded successfully")
 
     # Convert the video to mp3 and wav
     mp3_path = f"{download_folder}audio.mp3"
     wav_path = f"{download_folder}audio.wav"
-    overwrite_mp3 = should_overwrite(mp3_path, 'mp3')
-    overwrite_wav = should_overwrite(wav_path, 'wav')
+    overwrite_mp3 =  should_overwrite(mp3_path, 'mp3')
+    overwrite_wav =  should_overwrite(wav_path, 'wav')
 
     if overwrite_mp3:
         ffmpeg.input(video_file_path).output(mp3_path).run(overwrite_output=True)
@@ -77,7 +86,7 @@ def main():
         print(f"{yt.title} has been converted to wav successfully")
 
     # Transcribe the audio using Whisper
-    if should_overwrite(f"{download_folder}audio.srt", 'subtitle'):
+    if  should_overwrite(f"{download_folder}audio.srt", 'subtitle'):
         transcriber = Transcriber(wav_path, download_folder, yt.length, LANGUAGE_CODE)
         transcriber.transcribe()
 
@@ -108,7 +117,7 @@ def main():
         ]
     )
 
-    if input("Do you want to upload the video to LingQ? (y/n): ") == "y":
+    if auto_confirm or input("Do you want to upload the video to LingQ? (y/n): ") == "y":
         response = LingQ().post_from_multipart_data(LANGUAGE_CODE, data)
         if response.status_code != 201:
             return

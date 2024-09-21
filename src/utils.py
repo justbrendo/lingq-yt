@@ -70,8 +70,9 @@ class Transcriber:
                 print(f"{i}. {model}")
             else:
                 print(f"{i}. {model}", end=" | ")
-        model_name = models[int(input("Enter the model number: ")) - 1]
-
+        # model_name = models[int(input("Enter the model number: ")) - 1]
+        model_name = "large-v3"
+        
         model = whisperx.load_model(
             model_name,
             device=device,
@@ -79,9 +80,9 @@ class Transcriber:
         )
         
         audio = whisperx.load_audio(self.wav_path)
-        result = model.transcribe(audio, batch_size=16)
+        result = model.transcribe(audio, batch_size=16, language="de")
         
-        model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
+        model_a, metadata = whisperx.load_align_model(language_code=self.language_code, device=device)
         aligned_result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
 
         # segments, _info = model.transcribe(self.wav_path, beam_size=5)
